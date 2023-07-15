@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Web安全,网络安全,CTF,渗透测试,代码审计">
+    <meta name="description" content="一名热爱代码审计、红队攻防、渗透测试的Web手">
+    <meta name="author" content="烨">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-redefine.png">
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://yesec.github.io/2023/03/11/java反序列化基础/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Java反序列化基础">
+    <meta property="og:description" content="一名热爱代码审计、红队攻防、渗透测试的Web手">
+    <meta property="og:url" content="https://yesec.github.io2023/03/11/Java反序列化基础/">
+    
+    <meta property="og:site_name" content="Ye&#39;s Blog">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Java反序列化基础">
+    <meta name="twitter:description" content="一名热爱代码审计、红队攻防、渗透测试的Web手">
+    <meta name="twitter:image" content="/images/logo.png">
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+    <meta name="theme-color" content="#0064A0">
+    <link rel="shortcut icon" href="/images/logo.png">
+    
+    <title>
+        
+            Java反序列化基础 -
+        
+        Ye&#39;s Blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/assets/fonts.css">
+
+    
+    
+    
+    <script id="hexo-configurations">
+    let REDEFINE = window.REDEFINE || {};
+    REDEFINE.hexo_config = {"hostname":"yesec.github.io","root":"/","language":"zh-CN","path":"search.xml"};
+    REDEFINE.theme_config = {"toc":{"enable":true,"number":"ture","expand_all":true,"init_open":true},"style":{"primary_color":"#0064A0","avatar":"/images/logo.png","favicon":"/images/logo.png","og_image":{"enable":false,"image_url":null},"article_img_align":"center","right_side_width":"400px","content_max_width":"1100px","nav_color":{"left":"#f78736","right":"#367df7","transparency":35},"hover":{"shadow":true,"scale":false},"first_screen":{"enable":true,"background_image":{"light":"/images/bg.webp","dark":"/images/bg.webp"},"title_color":{"light":"#fff","dark":"#fff"},"description":"一个45度角躺平，想拯救世界的Web手","custom_font":{"enable":false,"font_family":null,"font_url":null}},"scroll":{"progress_bar":{"enable":true},"percent":{"enable":false}}},"local_search":{"enable":true,"preload":true},"code_block":{"copy":true,"style":"mac","custom_font":{"enable":false,"font_family":null,"font_url":null}},"pjax":{"enable":true},"lazyload":{"enable":true},"version":"1.2.0","friend_links":{"columns":2},"home_article":{"date_format":"auto","category":{"enable":true,"limit":3},"tag":{"enable":true,"limit":3}},"plugins":{"aplayer":{"enable":false,"audio":[{"name":null,"artist":null,"url":null,"cover":null},{"name":null,"artist":null,"url":null,"cover":null}]}}};
+    REDEFINE.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+  </script>
+    
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+        <span class="scroll-progress-bar"></span>
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="menu-wrapper">
+    
+    <div class="menu-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                Ye&#39;s Blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        
+                            <li class="menu-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        首页
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="menu-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/archives"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-archive"></i>
+                                        
+                                        归档
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="menu-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/about"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-user"></i>
+                                        
+                                        关于
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="menu-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div>
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="menu-drawer">
+        <ul class="drawer-menu-list">
+            
+                
+                    <li class="drawer-menu-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                首页
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-menu-item flex-center">
+                        <a class="" 
+                        href="/archives"  >
+                             
+                                
+                                    <i class="fa-regular fa-archive"></i>
+                                
+                                归档
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-menu-item flex-center">
+                        <a class="" 
+                        href="/about"  >
+                             
+                                
+                                    <i class="fa-regular fa-user"></i>
+                                
+                                关于
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+                      
+                <div class="article-title">
+                    <img src="/images/topic_bg.webp" alt="Java反序列化基础" />
+                    <h1 class="article-title-cover">Java反序列化基础</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/logo.png">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">烨</span>
+                            
+                                <span class="author-label">Lv1</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="pc">2023-03-11 19:38:54</span>
+        <span class="mobile">2023-03-11 19:38</span>
+        <span class="hover-info">创建</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="pc">2023-03-12 00:03:16</span>
+            <span class="mobile">2023-03-12 00:03</span>
+            <span class="hover-info">更新</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">JAVA反序列化</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+        <span class="article-wordcount article-meta-item">
+            <i class="fa-regular fa-file-word"></i>&nbsp;<span>2.1k 字</span>
+        </span>
+    
+    
+        <span class="article-min2read article-meta-item">
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>8 分钟</span>
+        </span>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fa-regular fa-eye"></i>&nbsp;<span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <h2 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h2><ul>
+<li><p>获取类：<code>forName</code></p>
+<p>用法：<code>Class.forName(String className)</code>  返回 <code>Class&lt;?&gt;</code>  类型</p>
+</li>
+<li><p>从对象获取类：<code>getClass</code></p>
+<p>用法：<code>Object.getClass()</code> 返回 <code>Class&lt;?&gt;</code>类型</p>
+<p>​			<code>Object</code>应为上下文中已经实例化的类的对象。</p>
+</li>
+<li><p>实例化类对象：<code>newInstance</code></p>
+<p>用法：<code>Class&lt;?&gt;.newInstance()</code></p>
+<p>​			实质上这个方法的作用是<strong>调用这个类的无参构造函数</strong>，当这个类没有无参构造方法或者无参构造方法为私有属性的时候，无法通过<code>newInstance</code>来获得这个类的对象，<code>java.lang.Runtime</code>就是一个典型案例，因为<code>Runtime</code>类的构造方法是私有的。</p>
+<p>​			返回<code>Object</code>类型，即返回<code>Class&lt;?&gt;</code>的一个对象</p>
+</li>
+<li><p>获取函数：<code>getMethod</code></p>
+<p>用法：<code>Object.getMethod(String name, class&lt;?&gt;...parameterType)</code></p>
+<p>​			第一个参数代表<strong>方法名</strong>，第二个参数表示<strong>该方法参数类型（可缺省）</strong>，不过Java中支持类的重载，一个同名函数往往会由于参数列表的不同而具有不同的效果，因而无法仅通过一个函数名来确定一个函数，因此第二个参数也会用来获取指定的一个方法。</p>
+<p>​			返回<code>Method</code>类型</p>
+</li>
+<li><p>执行函数：<code>invoke</code></p>
+<p>用法：<code>Method.invoke(Object obj, Object ... args)</code></p>
+<p>​			这个方法一般要与<code>getMethod</code>结合使用，一般是先用前者获取到一个<code>Method</code>类，再用<code>invoke</code>调用。</p>
+<p>​			当调用的是一个<strong>普通方法</strong>时，第一个参数代表<strong>类的一个对象</strong>；当调用的是一个<strong>静态方法</strong>时，第一个参数代表<strong>类</strong>，第二个参数代表<strong>方法的参数</strong>。</p>
+<p>​			可以这么理解：正常执行一个方法时，我们通过<code>A.method(B,C,D,...)</code>来执行；在反射中，我们则是通过<code>method.invoke(A,B,C,D,...)</code>去执行，普通方法的A需要时该类的一个对象，而静态方法的A则是类。</p>
+</li>
+</ul>
+<h2 id="Runtime类"><a href="#Runtime类" class="headerlink" title="Runtime类"></a>Runtime类</h2><p><code>Runtime</code>类是我们在Java安全中较为常见用于实现RCE的一个类，那么如何通过这个类来执行命令呢？刚才提到过<code>java.lang.Runtime</code>类的无参构造方法是私有的，我们无法通过<code>newInstance</code>来获取<code>Runtime</code>类的对象。</p>
+<p>之所以要将类的某个构造方法设置为私有的，这是由于<strong>单例模式</strong>的开发模式，通俗地来解释就是在某个类的构造函数只需要实例化调用一次时会如此设计，<strong>后续如果需要调用这个类的对象则需要通过调用这个类的某个特定静态方法来获得</strong>，这样的设计可以避免某个类的构造函数被多次重复的调用，最典型的例子就是创建数据库连接。</p>
+<p>那么<code>Runtime</code>所提供的静态方法就是<code>getRuntime</code>，通过调用<code>getRuntime</code>我们可以获取到<code>Runtime</code>类的一个对象。</p>
+<p>例如：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.example;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.InvocationTargetException;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException &#123;</span><br><span class="line">        <span class="comment">// 等价于 Runtime myRuntime = Runtime.getRuntime();</span></span><br><span class="line">        <span class="type">Object</span> <span class="variable">myRuntime</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>).getMethod(<span class="string">&quot;getRuntime&quot;</span>).invoke(<span class="literal">null</span>);</span><br><span class="line">        <span class="comment">// 等价于 myRuntime.exec(&quot;open /System/Applications/Calculator.app&quot;);</span></span><br><span class="line">        <span class="comment">// Runtime的exec方法有6个重载，这里的getMethod方法的第二个参数指定了获取参数为String的exec方法</span></span><br><span class="line">        <span class="type">Method</span> <span class="variable">exec</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>).getMethod(<span class="string">&quot;exec&quot;</span>, String.class);</span><br><span class="line">        exec.invoke(myRuntime,<span class="string">&quot;open /System/Applications/Calculator.app&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="序列化和反序列化"><a href="#序列化和反序列化" class="headerlink" title="序列化和反序列化"></a>序列化和反序列化</h2><p><strong>序列化</strong>：使用<code>ObjectOutputStream</code>类的<code>writeObject</code>函数</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public final void writeObject(Object x) throws IOException</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>反序列化</strong>：使用<code>ObjectInputStream</code>类的<code>readObject</code>函数</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public final Object readObject() throws IOException, ClassNotFoundException</span><br></pre></td></tr></table></figure></div>
+
+<p>支持序列化的对象必须满足：</p>
+<ol>
+<li>实现了<code>java.io.Serializable</code>接口</li>
+<li>当前对象的所有类属性可序列化，如果有一个属性不想或不能被序列化，则需要指定<code>transient</code>，使得该属性将不会被序列化</li>
+</ol>
+<p>DOME：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.example;</span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Employee</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> String address;</span><br><span class="line">    <span class="comment">// number成员声明了transient属性无法反序列化</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> <span class="type">int</span> number;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Employee</span><span class="params">(String name, String address, <span class="type">int</span> number)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">        <span class="built_in">this</span>.address = address;</span><br><span class="line">        <span class="built_in">this</span>.number = number;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">()</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;I am &quot;</span> + name);</span><br><span class="line">        System.out.println(<span class="string">&quot;Number is &quot;</span> + number);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Override readObject</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">// 调用默认的readObject方法，使其能正常反序列化</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        <span class="comment">// 重载的readObject方法多了一行输出</span></span><br><span class="line">        System.out.println(<span class="string">&quot;Employee call readObject Function&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">Employee</span> <span class="variable">e</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Employee</span>(<span class="string">&quot;Reyan Ali&quot;</span>,<span class="string">&quot;Phokka Kuan, Ambehta Peer&quot;</span>,<span class="number">123</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// Serialize</span></span><br><span class="line">            <span class="comment">// 创建一个文件输出流 -&gt; 用于写入文件</span></span><br><span class="line">            <span class="type">FileOutputStream</span> <span class="variable">fileOut</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;./employee.ser&quot;</span>);</span><br><span class="line">            <span class="comment">// 创建一个对象输出流 并且输出定向到文件中</span></span><br><span class="line">            <span class="type">ObjectOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(fileOut);</span><br><span class="line">            <span class="comment">// writeObject 序列化</span></span><br><span class="line">            out.writeObject(e);</span><br><span class="line">            out.close();</span><br><span class="line">            fileOut.close();</span><br><span class="line">            System.out.println(<span class="string">&quot;Serialized&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Deserialize</span></span><br><span class="line">            <span class="comment">// 创建文件输入流 -&gt; 用于读取文件</span></span><br><span class="line">            <span class="type">FileInputStream</span> <span class="variable">fileIn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;./employee.ser&quot;</span>);</span><br><span class="line">            <span class="comment">// 创建一个对象输入流</span></span><br><span class="line">            <span class="type">ObjectInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(fileIn);</span><br><span class="line">            <span class="comment">// readObject 反序列化</span></span><br><span class="line">            <span class="type">Employee</span> <span class="variable">obj</span> <span class="operator">=</span> (Employee) in.readObject();</span><br><span class="line">            in.close();</span><br><span class="line">            fileIn.close();</span><br><span class="line">            obj.info();</span><br><span class="line">            System.out.println(<span class="string">&quot;Deserialized&quot;</span>);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span>(IOException i) &#123;</span><br><span class="line">            i.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(ex);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130204141460.png"
+                      alt="image-20230130204141460"
+                ></p>
+<p><code>Number</code>成员由于声明了<code>transient</code>属性没有反序列化，所以这里输出的值为<code>0</code></p>
+<h2 id="反序列化触发点"><a href="#反序列化触发点" class="headerlink" title="反序列化触发点"></a>反序列化触发点</h2><p>除了常见的<code>ObjectInputStream.readObject</code>可以触发反序列化操作外，还有以下几种触发方式：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ObjectInputStream.readObject		<span class="comment">// 流转化为Object</span></span><br><span class="line">ObjectInputStream.readUnshared 		<span class="comment">// 流转化为Object</span></span><br><span class="line">XMLDecoder.readObject 				<span class="comment">// 读取xml转化为Object -&gt; XML反序列化</span></span><br><span class="line">Yaml.load							<span class="comment">// yaml字符串转Object  -&gt; yaml反序列化</span></span><br><span class="line">XStream.fromXML						<span class="comment">// XStream用于Java Object与xml相互转化</span></span><br><span class="line">ObjectMapper.readValue				<span class="comment">// jackson中的api 	-&gt; jackson反序列化漏洞</span></span><br><span class="line">JSON.parseObject					<span class="comment">// fastjson中的api	-&gt; fastjson反序列化漏洞</span></span><br></pre></td></tr></table></figure></div>
+
+<p><code>readUnshared</code>方法读取对象，不允许后续的<code>readObject</code>和<code>readUnshared</code>调用引用这次调用反序列化得到的对象，而<code>readObject</code>读取的对象可以。</p>
+<h2 id="反序列化过程分析"><a href="#反序列化过程分析" class="headerlink" title="反序列化过程分析"></a>反序列化过程分析</h2><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><p>反序列化的过程主要分为两步：</p>
+<ol>
+<li>读取序列化字节流，根据序列化规格提取对应的类</li>
+<li>利用反射实例化获得对象</li>
+</ol>
+<h3 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h3><p>跟进<code>ObjectInputStream.readObject</code>方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130211852595.png"
+                      alt="image-20230130211852595"
+                ></p>
+<p>跟进readObject方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130212010365.png"
+                      alt="image-20230130212010365"
+                ></p>
+<p>主要的反序列化代码是调用的<code>readObject0</code>方法：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Object</span> <span class="variable">obj</span> <span class="operator">=</span> readObject0(type, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure></div>
+
+<p>在<code>readObject0</code>里有一个<code>switch</code>判断：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130212421942.png"
+                      alt="image-20230130212421942"
+                ></p>
+<p>这里的<code>115</code>所指向的是<code>TC_OBJECT</code>，代表反序列化的对象是一个<code>Object</code>：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130213053495.png"
+                      alt="image-20230130213053495"
+                ></p>
+<p>跟进<code>readOrdinaryObject</code>：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130214019300.png"
+                      alt="image-20230130214019300"
+                ></p>
+<p>这里的<code>readClassDesc(false)</code>作用是从序列化流中提取出相关的类信息：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130214508184.png"
+                      alt="image-20230130214508184"
+                ></p>
+<p>跟进这里的<code>readNonProxyDesc()</code>方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130214604919.png"
+                      alt="image-20230130214604919"
+                ></p>
+<p>这里的关键点在于<code>resolveClass()</code>方法，这个方法实现了利用反射机制获取到类的Class对象：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130214701690.png"
+                      alt="image-20230130214701690"
+                ></p>
+<p>注意这里利用反射中的getName<code>和</code>forName&#96;最终获取到了类的Class对象：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130214137398.png"
+                      alt="image-20230130214137398"
+                ></p>
+<p>此处整一个反射就是先通过<code>Class.forName</code>获取到当前描述器所指代的类的Class对象，后续会在<code>initNonProxy</code>或<code>initProxy</code>函数中复制该Class对象的相关信息(包括相关函数)，最后在2044行处<code>ObjectStreamClass.newInstance</code>实例化该对象：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230130213134883.png"
+                      alt="image-20230130213134883"
+                ></p>
+<p>获得对象之后会在2213行的<code>readSerialData()</code>函数将序列化流中的相关数据填充进实例化后的对象中或调用当前类描述器的readObject函数：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230131090855974.png"
+                      alt="image-20230131090855974"
+                ></p>
+<p><code>readSerialData()</code>具体实现如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230131091855636.png"
+                      alt="image-20230131091855636"
+                ></p>
+<p>这里的<code>hasReadObjectMethod</code>用于判断该类是否有自己的<code>readObject</code>方法。</p>
+<p>然后可以跟进<code>invokeReadObject</code>方法，更深入的看到是如何设置对象的字段值的，这里忽略掉中间调用，最终是在<code>defaultReadFields</code>中的<code>setObjFieldValues</code>方法实现的：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="/images/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%9F%BA%E7%A1%80/image-20230131092026261.png"
+                      alt="image-20230131092026261"
+                ></p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>Java程序中类<code>ObjectInputStream</code>的<code>readObject</code>方法被用来将数据流反序列化为对象，如果流中的对象是<code>class</code>，则它的<code>ObjectStreamClass</code>描述符会被读取，并返回相应的class对象，<code>ObjectStreamClass</code>包含了类的名称及<code>serialVersionUID</code>。</p>
+<p>如果类描述符是动态代理类，则调用<code>resolveProxyClass</code>方法来获取本地类。如果不是动态代理类则调用<code>resolveClass</code>方法来获取本地类。如果无法解析该类，则抛出<code>ClassNotFoundException</code>异常。</p>
+<p>如果反序列化对象不是String、array、enum类型，<code>ObjectStreamClass</code>包含的类会在本地被检索，如果这个本地类没有实现<code>java.io.Serializable</code>或者<code>externalizable</code>接口，则抛出<code>InvalidClassException</code>异常。因为只有实现了<code>Serializable</code>或<code>Externalizable</code>接口的类的对象才能被序列化。</p>
+<p>前面分析中提到最后会调用<code>resolveClass</code>获取类的Class对象，这是反序列化过程中一个重要的地方，也是必经之路，所以有研究人员提出通过重载<code>ObjectInputStream</code>的<code>resolveClass</code>来限制可以被反序列化的类。</p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li>本文标题：Java反序列化基础</li>
+        <li>本文作者：烨</li>
+        <li>创建时间：2023-03-11 19:38:54</li>
+        <li>
+            本文链接：https://yesec.github.io/2023/03/11/Java反序列化基础/
+        </li>
+        <li>
+            版权声明：本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">#JAVA反序列化</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                        <div class="article-prev">
+                            <a class="prev"
+                            rel="prev"
+                            href="/2023/03/11/PHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/"
+                            >
+                                <span class="left arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">PHP反序列化漏洞总结</span>
+                                    <span class="post-nav-item">上一篇</span>
+                                </span>
+                            </a>
+                        </div>
+                    
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">此页目录</div>
+        <div class="page-title">Java反序列化基础</div>
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%B0%84"><span class="nav-number">1.</span> <span class="nav-text">反射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Runtime%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">Runtime类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">序列化和反序列化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="nav-number">4.</span> <span class="nav-text">反序列化触发点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">5.</span> <span class="nav-text">反序列化过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4"><span class="nav-number">5.1.</span> <span class="nav-text">步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">5.2.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.3.</span> <span class="nav-text">小结</span></a></li></ol></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+
+
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2022</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-regular fa-computer-classic"></i>&nbsp;&nbsp;<a href="/">烨</a>
+        </div>
+        
+            <script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">由 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a> 驱动</span>
+                <br> 
+            <span class="theme-version-container">主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v1.2.0</a>
+        </div>
+        
+        
+        
+            <div id="start_time_div" style="display:none">
+                2022/8/17 11:45:14
+            </div>
+            <div>
+                博客已运行 <span class="odometer" id="runtime_days" ></span> 天 <span class="odometer" id="runtime_hours"></span> 小时 <span class="odometer" id="runtime_minutes"></span> 分钟 <span class="odometer" id="runtime_seconds"></span> 秒
+            </div>
+        
+        
+        
+            <script async data-pjax>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="unfolded-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="fa-regular fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="folded-tools-list">
+        <li class="right-bottom-tools tool-toggle-show flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fa-solid fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fa-solid fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/menu-shrink.js"></script>
+
+<script src="/js/tools/go-top-bottom.js"></script>
+
+<script src="/js/tools/dark-light-toggle.js"></script>
+
+
+
+    
+<script src="/js/tools/local-search.js"></script>
+
+
+
+
+    
+<script src="/js/tools/code-block.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+    
+<script src="/js/tools/runtime.js"></script>
+
+    
+<script src="/js/layouts/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/toc-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+    
+        
+<script src="/js/libs/mermaid.min.js"></script>
+
+        
+<script src="/js/plugins/mermaid.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            REDEFINE.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            REDEFINE.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            REDEFINE.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>
