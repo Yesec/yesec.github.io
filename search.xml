@@ -821,7 +821,7 @@
 <p>对于这个类，在PHP 7.1+的版本下，我们构造Exp时也可以用以下的方式构造：</p>
 <div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Exp</span></span>&#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="variable">$cmd</span> = <span class="string">&quot;ls&quot;</span>;   <span class="comment">// 这里修改为public属性也是可以正常反序列化的</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">serialize</span>(<span class="keyword">new</span> <span class="title class_">Exp</span>);</span><br></pre></td></tr></table></figure></div>
 
-<h4 id="拷贝"><a href="#拷贝" class="headerlink" title="拷贝"></a>拷贝</h4><p>这里主要作用是可以<strong>将某个成员的值与另外一个成员的值保持一致</strong></p>
+<h4 id="拷贝"><a href="#拷贝" class="headerlink" title="拷贝"></a>拷贝</h4><p>这里主要作用是可以<strong>将某个成员的值与另外一个成员的值保持一致</strong>。</p>
 <h4 id="PHP-Incomplete-Class"><a href="#PHP-Incomplete-Class" class="headerlink" title="__PHP_Incomplete_Class"></a>__PHP_Incomplete_Class</h4><p>当我们反序列化一个<strong>不存在的类</strong>时，我们得到的对象就会转换为<code>__PHP_Incomplete_Class</code>这种形式，同时会将原始的类名储存在<code>__PHP_Incomplete_Class_Name</code>属性中。</p>
 <p>例如：</p>
 <div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">var_dump</span>(<span class="title function_ invoke__">unserialize</span>(<span class="string">&#x27;O:4:&quot;Hack&quot;:1:&#123;s:3:&quot;cmd&quot;;s:6:&quot;whoami&quot;;&#125;&#x27;</span>));</span><br></pre></td></tr></table></figure></div>
@@ -845,8 +845,8 @@
 <p>在这里我们将类名定义为<code>__PHP_Incomplete_Class</code>，但是并没有注册<code>__PHP_Incomplete_Class_Name</code>属性，无法找到与其对应绑定的类，因此序列化字节流中的其他属性就会被丢弃，最终得到如下的序列化字节流：</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">O:22:&quot;__PHP_Incomplete_Class&quot;:0:&#123;&#125;</span><br></pre></td></tr></table></figure></div>
 
-<p>此时得到的字节流与原本的字节流并不相同，便可以通过判断</p>
-<h4 id="闭包函数的序列化"><a href="#闭包函数的序列化" class="headerlink" title="闭包函数的序列化"></a>闭包函数的序列化</h4><p>PHP5.3后引入了闭包函数的概念，我们可以声明一个匿名函数并将其进行赋值。<br>但是我们无法直接对闭包函数进行序列化，需要借助<code>opis/closure</code>第三方组件来实现闭包函数的序列化</p>
+<p>此时得到的字节流与原本的字节流并不相同，便可以通过这段代码的判断。</p>
+<h4 id="闭包函数的序列化"><a href="#闭包函数的序列化" class="headerlink" title="闭包函数的序列化"></a>闭包函数的序列化</h4><p>PHP5.3后引入了闭包函数的概念，我们可以声明一个匿名函数并将其进行赋值。<br>但是我们无法直接对闭包函数进行序列化，需要借助<code>opis/closure</code>第三方组件来实现闭包函数的序列化。</p>
 <h4 id="sleep触发的情景"><a href="#sleep触发的情景" class="headerlink" title="__sleep触发的情景"></a>__sleep触发的情景</h4><p>PHP在SESSION执行反序列化时会调用对应类的<code>__sleep</code>方法，可以去撕一下PHP的源码看看原因，还是非常容易看出来的。</p>
 <h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a class="link"   href="https://zhuanlan.zhihu.com/p/405838002" >https://zhuanlan.zhihu.com/p/405838002 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p><a class="link"   href="https://xz.aliyun.com/t/7366" >https://xz.aliyun.com/t/7366 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
